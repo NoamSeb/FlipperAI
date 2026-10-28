@@ -366,8 +366,12 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3134987307893494877, guid: e27063be066a8044db6a8a7bef429251, type: 3}
+      propertyPath: m_Model
+      value: 
+      objectReference: {fileID: 5022602860645237092, guid: 02fdce429740d3549a16a2e74df518a0, type: 3}
+    - target: {fileID: 3134987307893494877, guid: e27063be066a8044db6a8a7bef429251, type: 3}
       propertyPath: m_BehaviorType
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3497045355834576187, guid: e27063be066a8044db6a8a7bef429251, type: 3}
       propertyPath: m_Creator

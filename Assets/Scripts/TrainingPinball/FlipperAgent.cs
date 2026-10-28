@@ -45,6 +45,7 @@ public class FlipperAgent : Agent {
 
         trainingPinball.onBallEnterBound += HandleOnBallEnterBound;
         trainingPinball.onBallHitTarget += HandleOnBallHitTarget;
+        
         trainingPinball.onEpisodeEnd += HandleOnEpisodeEnd;
     }
 
@@ -77,7 +78,13 @@ public class FlipperAgent : Agent {
     }
 
     public override void CollectObservations(VectorSensor sensor) {
-        //sensor.AddObservation(value);
+        Vector2 ballDir = (trainingPinball.Ball.transform.position - trainingPinball.transform.position);
+
+        Vector2 normalizedBallDir = ballDir / trainingPinball.Configuration.AveragePinballDimension;
+        
+        sensor.AddObservation(trainingPinball.Flipper(side).WorldToLocalVector(normalizedBallDir));
+        
+        Debug.DrawRay(trainingPinball.transform.position, trainingPinball.Flipper(side).WorldToLocalVector(normalizedBallDir)*10, Color.yellow);
     }
 
     public override void OnActionReceived(ActionBuffers actions) {
@@ -97,6 +104,7 @@ public class FlipperAgent : Agent {
     }
 
     void HandleOnEpisodeEnd() {
+        Debug.Log($"Cumulative Rewards : {GetCumulativeReward()}");
         EndEpisode();
         episodeId++;
     }
@@ -134,6 +142,8 @@ public class FlipperAgent : Agent {
 
     void HandleOnBallEnterBound(BoundTrigger.BoundType type) {
 
+        if(type == BoundTrigger.BoundType.Drain)
+            AddReward(-1);
     }
 
 }
