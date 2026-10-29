@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -17,7 +18,7 @@ public class ScoreManager : MonoBehaviour
     List<AgentRewards> scoreByAgent = new List<AgentRewards>();
     private List<string> csvParams = new List<string>();
 
-    private float GlobalScore = 0f;
+    private AgentRewards GlobalRewards = new AgentRewards();
     private string filePath;
 
     private void Awake()
@@ -34,7 +35,7 @@ public class ScoreManager : MonoBehaviour
             scoreByAgent.Add(new AgentRewards());
         }
 
-        filePath = Application.persistentDataPath + "/ResultTrainning_" + DateTime.Now.ToString("yyyyMMddHHmmss") +
+        filePath = Application.persistentDataPath + "/ResultTrainning_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") +
                    ".csv";
         csvParams.Add("");
         csvParams.Add("");
@@ -55,32 +56,28 @@ public class ScoreManager : MonoBehaviour
 
     private void UpdateGlobalScore(Recompenses recompenseType, int agentID)
     {
-        GlobalScore += recompenseScore.GetValueOrDefault(recompenseType);
-        Debug.Log($"[GLOBAL SCORE] --> {GlobalScore}");
+        float scoreToAdd = recompenseScore.GetValueOrDefault(recompenseType);
+        GlobalRewards.cumulativeReward += scoreToAdd;
+        Debug.Log($"[GLOBAL SCORE] --> {GlobalRewards.cumulativeReward}");
 
-        scoreByAgent[agentID].cumulativeReward = GlobalScore;
+        GlobalRewards.rewardsByType[(int)recompenseType] += scoreToAdd;
+        scoreByAgent[agentID].rewardsByType[(int)recompenseType] += scoreToAdd;
+        scoreByAgent[agentID].cumulativeReward += scoreToAdd;
     }
 
     private void ExportGlobalScoreToCSV()
     {
         StreamWriter writer = new StreamWriter(filePath);
 
-        writer.WriteLine("Agent, Score value");
+        string rewardNames = string.Join(";", Enum.GetNames(typeof(Recompenses)));
+        writer.WriteLine($"Agent, Score value, {rewardNames}");
 
-        writer.WriteLine("GLOBAL SCORE" + ";" + GlobalScore);
+        writer.WriteLine("GLOBAL SCORE" + ";" + GlobalRewards);
 
         for (int j = 1; j < scoreByAgent.Count; ++j)
         {
-            writer.Write($"Agent {j}" + ";" + scoreByAgent[j].cumulativeReward+";");
+            writer.Write($"Agent {j}" + ";" + scoreByAgent[j].cumulativeReward + ";");
             writer.WriteLine(string.Join(';', scoreByAgent[j].rewardsByType.ToArray()));
-            // for (int i = 0; i < Enum.GetValues(typeof(Recompenses)).Length; i++)
-            // {
-            // }
-            //
-            // for (int i = 0; i < csvParams.Count; i++)
-            // {
-            //     writer.WriteLine($"Agent {j}" + ";" + scoreByAgent[j]);
-            // }
         }
 
 
@@ -94,10 +91,11 @@ public class ScoreManager : MonoBehaviour
 
 public enum Recompenses
 {
-    UltraNegative = 0,
-    Negative = 1,
-    Moyenne = 2,
-    Forte = 3
+    TouchDrain = 0,
+    TriggerResetZone = 1,
+    NoHit = 2,
+    CloseToTarget = 3,
+    HitTarget = 4
 }
 
 public class AgentRewards
