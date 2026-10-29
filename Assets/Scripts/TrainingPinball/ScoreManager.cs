@@ -13,7 +13,7 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] private Dictionary<Recompenses, float> recompenseScore;
 
     public Dictionary<Recompenses, float> RecompenseScore => recompenseScore;
-    public Action<Recompenses, int> OnRecompenses;
+    public Action<Recompenses, int, float> OnRecompenses; // (type, agent id, reward actually given to the agent)
 
     List<AgentRewards> scoreByAgent = new List<AgentRewards>();
     private List<string> csvParams = new List<string>();
@@ -60,9 +60,8 @@ public class ScoreManager : MonoBehaviour
         ExportGlobalScoreToCSV();
     }
 
-    private void UpdateGlobalScore(Recompenses recompenseType, int agentID)
+    private void UpdateGlobalScore(Recompenses recompenseType, int agentID, float scoreToAdd)
     {
-        float scoreToAdd = recompenseScore.GetValueOrDefault(recompenseType);
         GlobalRewards.cumulativeReward += scoreToAdd;
 
         GlobalRewards.rewardsByType[(int)recompenseType] += scoreToAdd;
@@ -75,11 +74,11 @@ public class ScoreManager : MonoBehaviour
         StreamWriter writer = new StreamWriter(filePath);
 
         string rewardNames = string.Join(";", Enum.GetNames(typeof(Recompenses)));
-        writer.WriteLine($"Agent, Score value, {rewardNames}");
+        writer.WriteLine($"Agent;Score value;{rewardNames}");
 
-        writer.WriteLine("GLOBAL SCORE" + ";" + GlobalRewards);
+        writer.WriteLine("GLOBAL SCORE" + ";" + GlobalRewards.cumulativeReward + ";" + string.Join(';', GlobalRewards.rewardsByType));
 
-        for (int j = 1; j < scoreByAgent.Count; ++j)
+        for (int j = 0; j < scoreByAgent.Count; ++j)
         {
             writer.Write($"Agent {j}" + ";" + scoreByAgent[j].cumulativeReward + ";");
             writer.WriteLine(string.Join(';', scoreByAgent[j].rewardsByType.ToArray()));
@@ -89,8 +88,11 @@ public class ScoreManager : MonoBehaviour
         writer.Flush();
         writer.Close();
 
-        float result = 100f * totalHitTarget / totalShoot;
-        Debug.Log($"[GLOBAL] Cible touchée dans {result:F1}% des contacts avec le flipper " + $"({totalHitTarget}/{totalShoot})");
+        // Shot = flipper press that touched the ball. Counted over the whole session, including the random start of training.
+        if (totalShoot > 0) {
+            float result = 100f * totalHitTarget / totalShoot;
+            Debug.Log($"[GLOBAL] Cible touchée pour {result:F1}% des tirs " + $"({totalHitTarget}/{totalShoot})");
+        }
         
         Debug.LogError($"DATA SAVED AT : {filePath}");
     }
