@@ -46,8 +46,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScoreManager
   recompenseScore:
   - key: 0
-    value: -1
+    value: -10
   - key: 2
-    value: 1
+    value: -3
   - key: 1
-    value: 0.5
+    value: 2.5
+  - key: 3
+    value: 5
+  - key: 4
+    value: 10

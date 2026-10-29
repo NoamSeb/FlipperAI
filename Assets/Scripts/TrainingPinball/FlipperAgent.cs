@@ -96,6 +96,11 @@ public class FlipperAgent : Agent {
         if (!trainingPinball.IsButtonPressed(side) && isPressed) {
             buttonPressedTimestamp = Time.fixedTime;
         }
+        else if(trainingPinball.IsButtonPressed(side) && !isPressed)
+        {
+            if(buttonPressedTimestamp > ballInContactTimestamp)
+                UpdateScore(Recompenses.NoHit);
+        }
 
         trainingPinball.SetButtonState(isPressed, side);
     }
@@ -119,8 +124,6 @@ public class FlipperAgent : Agent {
         if (!BallInContact) {
             ballEnterFlipperTimestamp = Time.fixedTime;
             //Debug.Log("HandleOnBallEnterFlipper");
-            if(trainingPinball.IsButtonPressed(side))
-                UpdateScore(Recompenses.Negative);
         }
 
         HandleOnBallInContactWithFlipper(side);
@@ -137,7 +140,7 @@ public class FlipperAgent : Agent {
 
     void HandleOnBallHitTarget()
     {
-        UpdateScore(Recompenses.Forte); // God of all gods
+        UpdateScore(Recompenses.HitTarget); // God of all gods
     }
 
     void HandleOnBallEnterAnyFlipper(FlipperSide side) {
@@ -150,11 +153,11 @@ public class FlipperAgent : Agent {
     void HandleOnBallEnterBound(BoundTrigger.BoundType type) {
 
         if(type == BoundTrigger.BoundType.Drain)
-           UpdateScore(Recompenses.UltraNegative);
-        if(type == BoundTrigger.BoundType.OtherSide)
-            UpdateScore(Recompenses.Negative);
+           UpdateScore(Recompenses.TouchDrain);
+        // if(type == BoundTrigger.BoundType.OtherSide)
+        //     UpdateScore(Recompenses.Negative);
         if(type == BoundTrigger.BoundType.ResetZone)
-            UpdateScore(Recompenses.Negative);
+            UpdateScore(Recompenses.TriggerResetZone);
     }
 
     void UpdateScore(Recompenses recompenseType)
