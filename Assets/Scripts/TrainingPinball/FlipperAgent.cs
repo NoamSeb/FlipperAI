@@ -25,8 +25,6 @@ public class FlipperAgent : Agent {
     float ballEnterOtherFlipperTimestamp = 0f;
     float episodeBeginTimestamp = 0f;
 
-    private DecompteRepcompense testDecompte = new DecompteRepcompense();
-
     bool BallInContact => Time.fixedTime <= ballInContactTimestamp + Time.fixedDeltaTime * 3; // Solves jittering at low speed. We allow 3 fixed update of before counting a new collision as an "OnCollisionEnter"
 
     void Awake() {
@@ -85,7 +83,9 @@ public class FlipperAgent : Agent {
 
         Vector2 normalizedBallDir = ballDir / trainingPinball.Configuration.AveragePinballDimension;
         
-        sensor.AddObservation(trainingPinball.Flipper(side).WorldToLocalVector(normalizedBallDir));
+        sensor.AddObservation(trainingPinball.Flipper(side).WorldToLocalVector(normalizedBallDir)); // Ball position
+        sensor.AddObservation(trainingPinball.Flipper(side).WorldToLocalVector(trainingPinball.Target.transform.position)); // Target Position
+        sensor.AddObservation(trainingPinball.Flipper(side).FinalAngle);
         
         Debug.DrawRay(trainingPinball.transform.position, trainingPinball.Flipper(side).WorldToLocalVector(normalizedBallDir)*10, Color.yellow);
     }
@@ -119,6 +119,8 @@ public class FlipperAgent : Agent {
         if (!BallInContact) {
             ballEnterFlipperTimestamp = Time.fixedTime;
             //Debug.Log("HandleOnBallEnterFlipper");
+            if(trainingPinball.IsButtonPressed(side))
+                UpdateScore(Recompenses.Negative);
         }
 
         HandleOnBallInContactWithFlipper(side);
@@ -148,7 +150,11 @@ public class FlipperAgent : Agent {
     void HandleOnBallEnterBound(BoundTrigger.BoundType type) {
 
         if(type == BoundTrigger.BoundType.Drain)
-           UpdateScore(Recompenses.Negative);
+           UpdateScore(Recompenses.UltraNegative);
+        if(type == BoundTrigger.BoundType.OtherSide)
+            UpdateScore(Recompenses.Negative);
+        if(type == BoundTrigger.BoundType.ResetZone)
+            UpdateScore(Recompenses.Negative);
     }
 
     void UpdateScore(Recompenses recompenseType)
