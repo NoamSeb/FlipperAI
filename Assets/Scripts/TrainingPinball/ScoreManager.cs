@@ -58,7 +58,6 @@ public class ScoreManager : MonoBehaviour
     {
         float scoreToAdd = recompenseScore.GetValueOrDefault(recompenseType);
         GlobalRewards.cumulativeReward += scoreToAdd;
-        Debug.Log($"[GLOBAL SCORE] --> {GlobalRewards.cumulativeReward}");
 
         GlobalRewards.rewardsByType[(int)recompenseType] += scoreToAdd;
         scoreByAgent[agentID].rewardsByType[(int)recompenseType] += scoreToAdd;
