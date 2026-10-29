@@ -3,10 +3,11 @@ using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
 using static Flipper;
+using System.Collections.Generic;
 
 public class FlipperAgent : Agent {
 
-    static int NextAgentId = 0;
+    public static int NextAgentId = 0;
 
     [SerializeField] TrainingPinballArea trainingPinball;
     [SerializeField] Flipper.FlipperSide side = Flipper.FlipperSide.Left;
@@ -24,7 +25,9 @@ public class FlipperAgent : Agent {
     float ballEnterOtherFlipperTimestamp = 0f;
     float episodeBeginTimestamp = 0f;
 
-    bool BallInContact => Time.fixedTime <= ballInContactTimestamp + Time.fixedDeltaTime * 3; // Solves jittering at low speed. We allow 3 fixed update of before counting a new collision as an "OnCollisionEnter"    
+    private DecompteRepcompense testDecompte = new DecompteRepcompense();
+
+    bool BallInContact => Time.fixedTime <= ballInContactTimestamp + Time.fixedDeltaTime * 3; // Solves jittering at low speed. We allow 3 fixed update of before counting a new collision as an "OnCollisionEnter"
 
     void Awake() {
         playerController = new PlayerController();
@@ -130,7 +133,9 @@ public class FlipperAgent : Agent {
         // Do not use. May be called multiple times due to jittering
     }
 
-    void HandleOnBallHitTarget() {
+    void HandleOnBallHitTarget()
+    {
+        UpdateScore(Recompenses.Forte); // God of all gods
     }
 
     void HandleOnBallEnterAnyFlipper(FlipperSide side) {
@@ -143,7 +148,13 @@ public class FlipperAgent : Agent {
     void HandleOnBallEnterBound(BoundTrigger.BoundType type) {
 
         if(type == BoundTrigger.BoundType.Drain)
-            AddReward(-1);
+           UpdateScore(Recompenses.Negative);
+    }
+
+    void UpdateScore(Recompenses recompenseType)
+    {
+        AddReward(ScoreManager.Instance.RecompenseScore.GetValueOrDefault(recompenseType));
+        ScoreManager.Instance.OnRecompenses.Invoke(recompenseType, id);
     }
 
 }
