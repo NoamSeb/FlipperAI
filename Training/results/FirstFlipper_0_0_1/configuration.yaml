@@ -35,11 +35,11 @@ behaviors:
           memory: null
           goal_conditioning_type: hyper
           deterministic: false
-    init_path: results\FirstFlipper_0_0_0\PinballFlipper\checkpoint.pt
+    init_path: null
     keep_checkpoints: 5
     even_checkpoints: false
-    max_steps: 100000
-    time_horizon: 128
+    max_steps: 600000
+    time_horizon: 512
     summary_freq: 10240
     threaded: false
     self_play: null
@@ -67,10 +67,10 @@ engine_settings:
 environment_parameters: null
 checkpoint_settings:
   run_id: FirstFlipper_0_0_1
-  initialize_from: FirstFlipper_0_0_0
+  initialize_from: null
   load_model: false
   resume: false
-  force: false
+  force: true
   train_model: false
   inference: false
   results_dir: results

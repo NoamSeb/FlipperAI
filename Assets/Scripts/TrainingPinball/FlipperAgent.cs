@@ -11,9 +11,11 @@ public class FlipperAgent : Agent {
 
     [SerializeField] TrainingPinballArea trainingPinball;
     [SerializeField] Flipper.FlipperSide side = Flipper.FlipperSide.Left;
+    // [SerializeField] float distanceTargetThreshold = 1.5f;
 
     int id = 0;
     int episodeId = 0;
+    // private float distanceWithTarget = 0f;
 
 
     PlayerController playerController;
@@ -67,6 +69,7 @@ public class FlipperAgent : Agent {
     }
 
     private void FixedUpdate() {
+        // CalculateDistanceWithTarget();
     }
 
     public override void OnEpisodeBegin() {
@@ -111,8 +114,9 @@ public class FlipperAgent : Agent {
         discreteActionsOut[0] = isPressed ? 1 : 0;
     }
 
-    void HandleOnEpisodeEnd() {
-        Debug.Log($"Cumulative Rewards : {GetCumulativeReward()}");
+    void HandleOnEpisodeEnd()
+    {
+        // AddDistanceWithTargetReward();
         EndEpisode();
         episodeId++;
     }
@@ -123,7 +127,6 @@ public class FlipperAgent : Agent {
         // Solves jittering at low speed. We allow 3 fixed update of before counting a new collision as an "OnCollisionEnter"
         if (!BallInContact) {
             ballEnterFlipperTimestamp = Time.fixedTime;
-            //Debug.Log("HandleOnBallEnterFlipper");
         }
 
         HandleOnBallInContactWithFlipper(side);
@@ -147,7 +150,6 @@ public class FlipperAgent : Agent {
         if (side != this.side) {
             ballEnterOtherFlipperTimestamp = Time.fixedTime;
         }
-
     }
 
     void HandleOnBallEnterBound(BoundTrigger.BoundType type) {
@@ -160,10 +162,24 @@ public class FlipperAgent : Agent {
             UpdateScore(Recompenses.TriggerResetZone);
     }
 
-    void UpdateScore(Recompenses recompenseType)
+    void UpdateScore(Recompenses recompenseType, float divisor = 1f)
     {
-        AddReward(ScoreManager.Instance.RecompenseScore.GetValueOrDefault(recompenseType));
+        AddReward(ScoreManager.Instance.RecompenseScore.GetValueOrDefault(recompenseType)/divisor);
         ScoreManager.Instance.OnRecompenses.Invoke(recompenseType, id);
     }
+
+    // void CalculateDistanceWithTarget()
+    // {
+    //     Vector2 dist =
+    //         trainingPinball.Ball.transform.position - trainingPinball.Target.transform.position;
+    //     if(dist.magnitude<distanceTargetThreshold)
+    //         distanceWithTarget = dist.magnitude;
+    // }
+    //
+    // void AddDistanceWithTargetReward()
+    // {
+    //     float divisor = Mathf.Lerp(distanceTargetThreshold, distanceWithTarget,)
+    //     UpdateScore(Recompenses.CloseToTarget, divisor);
+    // }
 
 }
