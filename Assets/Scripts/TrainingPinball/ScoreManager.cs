@@ -58,7 +58,7 @@ public class ScoreManager : MonoBehaviour
         GlobalScore += recompenseScore.GetValueOrDefault(recompenseType);
         Debug.Log($"[GLOBAL SCORE] --> {GlobalScore}");
 
-        scoreByAgent[agentID] = GlobalScore;
+        scoreByAgent[agentID].cumulativeReward = GlobalScore;
     }
 
     private void ExportGlobalScoreToCSV()
@@ -94,9 +94,10 @@ public class ScoreManager : MonoBehaviour
 
 public enum Recompenses
 {
-    Negative = 0,
-    Moyenne = 1,
-    Forte = 2
+    UltraNegative = 0,
+    Negative = 1,
+    Moyenne = 2,
+    Forte = 3
 }
 
 public class AgentRewards

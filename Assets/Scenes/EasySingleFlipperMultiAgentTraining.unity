@@ -2866,6 +2866,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: ScoreManager
       objectReference: {fileID: 0}
+    - target: {fileID: 3375210787635026369, guid: f994041f6a1cd9f4db4553f62f11a8d9, type: 3}
+      propertyPath: recompenseScore.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3375210787635026369, guid: f994041f6a1cd9f4db4553f62f11a8d9, type: 3}
+      propertyPath: recompenseScore.Array.data[3].key
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3375210787635026369, guid: f994041f6a1cd9f4db4553f62f11a8d9, type: 3}
+      propertyPath: recompenseScore.Array.data[0].value
+      value: -10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3375210787635026369, guid: f994041f6a1cd9f4db4553f62f11a8d9, type: 3}
+      propertyPath: recompenseScore.Array.data[1].value
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3375210787635026369, guid: f994041f6a1cd9f4db4553f62f11a8d9, type: 3}
+      propertyPath: recompenseScore.Array.data[2].value
+      value: -3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3375210787635026369, guid: f994041f6a1cd9f4db4553f62f11a8d9, type: 3}
+      propertyPath: recompenseScore.Array.data[3].value
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 3640488595973314377, guid: f994041f6a1cd9f4db4553f62f11a8d9, type: 3}
       propertyPath: m_LocalPosition.x
       value: 126.67117
