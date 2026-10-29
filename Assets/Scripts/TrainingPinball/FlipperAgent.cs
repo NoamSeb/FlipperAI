@@ -28,7 +28,12 @@ public class FlipperAgent : Agent {
     float episodeBeginTimestamp = 0f;
 
     bool BallInContact => Time.fixedTime <= ballInContactTimestamp + Time.fixedDeltaTime * 3; // Solves jittering at low speed. We allow 3 fixed update of before counting a new collision as an "OnCollisionEnter"
-
+    
+    
+    [SerializeField] float distanceTargetThreshold = 1.5f;   // décommenté
+    private float distanceWithTarget = -1f;   // décommenté, et passé de 0f à -1f
+    
+    
     void Awake() {
         playerController = new PlayerController();
         playerController.Enable();
@@ -69,7 +74,7 @@ public class FlipperAgent : Agent {
     }
 
     private void FixedUpdate() {
-        // CalculateDistanceWithTarget();
+        CalculateDistanceWithTarget();
     }
 
     public override void OnEpisodeBegin() {
@@ -79,6 +84,8 @@ public class FlipperAgent : Agent {
         ballEnterFlipperTimestamp = 0f;
         ballEnterOtherFlipperTimestamp = 0;
         episodeBeginTimestamp = Time.fixedTime;
+        
+        distanceWithTarget = -1f;
     }
 
     public override void CollectObservations(VectorSensor sensor) {
@@ -92,8 +99,27 @@ public class FlipperAgent : Agent {
         
         Debug.DrawRay(trainingPinball.transform.position, trainingPinball.Flipper(side).WorldToLocalVector(normalizedBallDir)*10, Color.yellow);
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     public override void OnActionReceived(ActionBuffers actions) {
+
+        
         bool isPressed = actions.DiscreteActions[0] > 0;
 
         if (!trainingPinball.IsButtonPressed(side) && isPressed) {
@@ -116,7 +142,7 @@ public class FlipperAgent : Agent {
 
     void HandleOnEpisodeEnd()
     {
-        // AddDistanceWithTargetReward();
+        AddDistanceWithTargetReward();
         EndEpisode();
         episodeId++;
     }
@@ -127,6 +153,8 @@ public class FlipperAgent : Agent {
         // Solves jittering at low speed. We allow 3 fixed update of before counting a new collision as an "OnCollisionEnter"
         if (!BallInContact) {
             ballEnterFlipperTimestamp = Time.fixedTime;
+            
+            ScoreManager.Instance.totalShoot += 1;
         }
 
         HandleOnBallInContactWithFlipper(side);
@@ -134,7 +162,6 @@ public class FlipperAgent : Agent {
 
     void HandleOnBallInContactWithFlipper(FlipperSide side) {
         ballInContactTimestamp = Time.fixedTime;
-
     }
 
     void HandleOnBallExitFlipper(FlipperSide side) {
@@ -143,6 +170,7 @@ public class FlipperAgent : Agent {
 
     void HandleOnBallHitTarget()
     {
+        ScoreManager.Instance.totalHitTarget += 1;
         UpdateScore(Recompenses.HitTarget); // God of all gods
     }
 
@@ -167,19 +195,128 @@ public class FlipperAgent : Agent {
         AddReward(ScoreManager.Instance.RecompenseScore.GetValueOrDefault(recompenseType)/divisor);
         ScoreManager.Instance.OnRecompenses.Invoke(recompenseType, id);
     }
+    
+    
+    
+    
+    [Header("Reward: close to target")]
+    [SerializeField] float nearDistance = 6f;       // <= : grosse récompense (diviseur 1)
+    [SerializeField] float midDistance = 13f;       // <= : récompense moyenne (diviseur 2), au-delà : faible (diviseur 3)
+    [SerializeField] float retreatMargin = 0.3f;    // de combien la balle doit s'éloigner pour compter comme "retombe" (évite le jitter)
 
-    // void CalculateDistanceWithTarget()
-    // {
-    //     Vector2 dist =
-    //         trainingPinball.Ball.transform.position - trainingPinball.Target.transform.position;
-    //     if(dist.magnitude<distanceTargetThreshold)
-    //         distanceWithTarget = dist.magnitude;
-    // }
-    //
-    // void AddDistanceWithTargetReward()
-    // {
-    //     float divisor = Mathf.Lerp(distanceTargetThreshold, distanceWithTarget,)
-    //     UpdateScore(Recompenses.CloseToTarget, divisor);
-    // }
+    private float currentDistanceToTarget = -1f;
+    private float closestDistanceInApproach = Mathf.Infinity;
+    private bool approachRewarded = false;
+    
+    
+    
+     void CalculateDistanceWithTarget()
+     {
+         //Vector2 dist =
+         //    trainingPinball.Ball.transform.position - trainingPinball.Target.transform.position;
+         //if(dist.magnitude<distanceTargetThreshold)
+         //    distanceWithTarget = dist.magnitude;
+         //
+         //Debug.Log("Distance: " + distanceWithTarget);
+         
+         
+         
+         
+         
+         
+         
+         //currentDistanceToTarget = Vector2.Distance(
+         //    trainingPinball.Ball.transform.position,
+         //    trainingPinball.Target.transform.position);
+         //
+         //if (currentDistanceToTarget < distanceTargetThreshold)
+         //    distanceWithTarget = currentDistanceToTarget;
+         //
+         //if (currentDistanceToTarget <= 6)
+         //{
+         //    UpdateScore(Recompenses.CloseToTarget, 1);
+         //   Debug.Log("Récompense grande: " + ScoreManager.Instance.RecompenseScore.GetValueOrDefault(Recompenses.CloseToTarget)/1);
+         //}
+         //else if (currentDistanceToTarget > 6 && currentDistanceToTarget <= 13)
+         //{
+         //    UpdateScore(Recompenses.CloseToTarget, 2); 
+         //    Debug.Log("Récompense moyenne: " + ScoreManager.Instance.RecompenseScore.GetValueOrDefault(Recompenses.CloseToTarget)/2);
+         //}
+         //else
+         //{
+         //    UpdateScore(Recompenses.CloseToTarget, 3);
+         //    Debug.Log("Récompense grande: " + ScoreManager.Instance.RecompenseScore.GetValueOrDefault(Recompenses.CloseToTarget)/3);
+         //}
+         //
+         //Debug.Log("Distance réelle: " + currentDistanceToTarget + " | Utilisée pour la récompense: " + distanceWithTarget);
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         currentDistanceToTarget = Vector2.Distance(
+             trainingPinball.Ball.transform.position,
+             trainingPinball.Target.transform.position);
 
+         if (currentDistanceToTarget < distanceTargetThreshold)
+             distanceWithTarget = currentDistanceToTarget;
+
+         if (currentDistanceToTarget < closestDistanceInApproach)
+         {
+             closestDistanceInApproach = currentDistanceToTarget;
+             approachRewarded = false;
+         }
+         else if (!approachRewarded && currentDistanceToTarget > closestDistanceInApproach + retreatMargin)
+         {
+
+             if (closestDistanceInApproach <= nearDistance)
+             {
+                 UpdateScore(Recompenses.CloseToTarget, 2);
+             }
+             else if (closestDistanceInApproach <= midDistance)
+             {
+                 UpdateScore(Recompenses.CloseToTarget, 10);
+             }
+             else
+             {
+                 UpdateScore(Recompenses.CloseToTarget, 20);
+             }
+             
+             
+             //GiveCloseToTargetReward(closestDistanceInApproach);
+             
+             
+             approachRewarded = true;
+             closestDistanceInApproach = currentDistanceToTarget; // nouvelle référence pour la prochaine approche
+         }
+     }
+     
+     
+     
+     
+     
+     
+     
+     
+    
+     void AddDistanceWithTargetReward()
+     {
+         //float divisor = Mathf.Lerp(distanceTargetThreshold, distanceWithTarget,)
+         //UpdateScore(Recompenses.CloseToTarget, divisor);
+         
+         
+         if (distanceWithTarget < 0f) return;
+
+         float t = distanceWithTarget / distanceTargetThreshold;
+         float divisor = Mathf.Lerp(1f, 4f, t);
+
+         UpdateScore(Recompenses.CloseToTarget, divisor);
+     }
 }

@@ -21,6 +21,9 @@ public class ScoreManager : MonoBehaviour
     private AgentRewards GlobalRewards = new AgentRewards();
     private string filePath;
 
+    public int totalHitTarget = 0;
+    public int totalShoot = 0;
+
     private void Awake()
     {
         if (Instance == null)
@@ -29,6 +32,9 @@ public class ScoreManager : MonoBehaviour
 
     private void Start()
     {
+        totalHitTarget = 0;
+        totalShoot = 0;
+        
         OnRecompenses += UpdateGlobalScore;
         for (int i = 0; i < FlipperAgent.NextAgentId; i++)
         {
@@ -83,6 +89,9 @@ public class ScoreManager : MonoBehaviour
         writer.Flush();
         writer.Close();
 
+        float result = 100f * totalHitTarget / totalShoot;
+        Debug.Log($"[GLOBAL] Cible touchée dans {result:F1}% des contacts avec le flipper " + $"({totalHitTarget}/{totalShoot})");
+        
         Debug.LogError($"DATA SAVED AT : {filePath}");
     }
 }
@@ -94,7 +103,7 @@ public enum Recompenses
     TriggerResetZone = 1,
     NoHit = 2,
     CloseToTarget = 3,
-    HitTarget = 4
+    HitTarget = 4,
 }
 
 public class AgentRewards
