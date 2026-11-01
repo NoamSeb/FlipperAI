@@ -123,6 +123,10 @@ public class FlipperAgent : Agent {
             if(buttonPressedTimestamp > ballInContactTimestamp)
                 UpdateScore(Recompenses.NoHit);
         }
+        
+        if (!BallInContact && (trainingPinball.IsButtonPressed(FlipperSide.Left) || trainingPinball.IsButtonPressed(FlipperSide.Right))) {
+            UpdateScore(Recompenses.ButtonPressedWithouBall);
+        }
 
         trainingPinball.SetButtonState(isPressed, side);
         CountShot();
@@ -147,6 +151,9 @@ public class FlipperAgent : Agent {
             ballEnterFlipperTimestamp = Time.fixedTime;
         }
 
+        if (!BallInContact && (trainingPinball.IsButtonPressed(FlipperSide.Left) || trainingPinball.IsButtonPressed(FlipperSide.Right))) {
+            UpdateScore(Recompenses.ButtonPressedWithouBall);
+        }
         HandleOnBallInContactWithFlipper(side);
     }
 
@@ -157,6 +164,10 @@ public class FlipperAgent : Agent {
 
     void HandleOnBallExitFlipper(FlipperSide side) {
         // Do not use. May be called multiple times due to jittering
+        
+        if (!BallInContact && (trainingPinball.IsButtonPressed(FlipperSide.Left) || trainingPinball.IsButtonPressed(FlipperSide.Right))) {
+            UpdateScore(Recompenses.ButtonPressedWithouBall);
+        }
     }
 
     void HandleOnBallHitTarget()

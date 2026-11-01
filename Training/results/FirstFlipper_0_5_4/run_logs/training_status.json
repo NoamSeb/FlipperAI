@@ -1,0 +1,38 @@
+{
+    "PinballFlipper": {
+        "checkpoints": [
+            {
+                "steps": 499935,
+                "file_path": "results\\FirstFlipper_0_5_4\\PinballFlipper\\PinballFlipper-499935.onnx",
+                "reward": 3.3982257328781427,
+                "creation_time": 1793349739.6167417,
+                "auxillary_file_paths": [
+                    "results\\FirstFlipper_0_5_4\\PinballFlipper\\PinballFlipper-499935.pt"
+                ]
+            },
+            {
+                "steps": 600182,
+                "file_path": "results\\FirstFlipper_0_5_4\\PinballFlipper\\PinballFlipper-600182.onnx",
+                "reward": 4.823673122854375,
+                "creation_time": 1793349812.6971035,
+                "auxillary_file_paths": [
+                    "results\\FirstFlipper_0_5_4\\PinballFlipper\\PinballFlipper-600182.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 600182,
+            "file_path": "results\\FirstFlipper_0_5_4\\PinballFlipper.onnx",
+            "reward": 4.823673122854375,
+            "creation_time": 1793349812.6971035,
+            "auxillary_file_paths": [
+                "results\\FirstFlipper_0_5_4\\PinballFlipper\\PinballFlipper-600182.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

@@ -106,6 +106,7 @@ public enum Recompenses
     NoHit = 2,
     CloseToTarget = 3,
     HitTarget = 4,
+    ButtonPressedWithouBall = 5
 }
 
 public class AgentRewards
