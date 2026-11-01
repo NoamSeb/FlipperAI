@@ -173,7 +173,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8483205016344740207, guid: 7ff41f86366f22945aa018cd76c1ebb1, type: 3}
       propertyPath: toggledOn
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8483205016344740207, guid: 7ff41f86366f22945aa018cd76c1ebb1, type: 3}
       propertyPath: speedUpOnAwake
