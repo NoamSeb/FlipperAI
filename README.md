@@ -1,4 +1,4 @@
-# COMPTE RENDU TRAVAIL IA - Margot et Noam
+# COMPTE RENDU TRAVAIL IA - Margot DELAGE et Noam SEBAHOUN
 Dernier modèle d'IA = `FirstFlipper_2_0_0`
 - A noter que ce modèle fonctionne de manière optimisé pour le Dual. Elle fonctionnera en Hard et en Easy mais risque d'avoir des performances moyenens. Si vous voulez tester le Hard, prévilégiez le modèle `FirstFlipper_1_2_2` et le modèle `FirstFlipper_0_6_2`pour le Easy.
 
