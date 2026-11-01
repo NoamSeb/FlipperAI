@@ -177,7 +177,7 @@ public class FlipperAgent : Agent {
 
     void HandleOnBallHitTarget()
     {
-        ScoreManager.Instance.totalHitTarget += 1;
+        //ScoreManager.Instance.totalHitTarget += 1;
         targetHitsInEpisode++;
         closestDistanceToTarget = 0f;
         UpdateScore(Recompenses.HitTarget); // God of all gods
@@ -223,7 +223,7 @@ public class FlipperAgent : Agent {
         if (shotCountedForPress || !trainingPinball.IsButtonPressed(side) || !BallInContact) { return; }
 
         shotCountedForPress = true;
-        ScoreManager.Instance.totalShoot += 1;
+        //ScoreManager.Instance.totalShoot += 1;
 
         if (closestDistanceToTarget < 0f) {
             closestDistanceToTarget = DistanceToTarget;

@@ -83,6 +83,7 @@ public class TrainingPinballArea : MonoBehaviour {
 
     public void RelocateTarget() {
         if (targetSpawners.Count <= 0) { return; }
+        ScoreManager.Instance.totalShoot += 1;
 
         int spawnerIndex = Random.Range(0, targetSpawners.Count);
         Target.transform.position = targetSpawners[spawnerIndex].RandomPosition;
@@ -151,6 +152,7 @@ public class TrainingPinballArea : MonoBehaviour {
 
     void HandleOnBallHitTarget() {
         onBallHitTarget?.Invoke();
+        ScoreManager.Instance.totalHitTarget += 1;
         if (episodeType == EpisodeType.OneShot) {
             PlayNextEpisode();
         } else {
