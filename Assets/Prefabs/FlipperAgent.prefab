@@ -52,6 +52,7 @@ MonoBehaviour:
   MaxStep: 0
   trainingPinball: {fileID: 0}
   side: 0
+  impactPredictionHorizon: 1.5
 --- !u!114 &6143876766288088247
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -65,7 +66,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.Policies.BehaviorParameters
   m_BrainParameters:
-    VectorObservationSize: 9
+    VectorObservationSize: 15
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
