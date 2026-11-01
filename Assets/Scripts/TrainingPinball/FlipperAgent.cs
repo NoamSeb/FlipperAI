@@ -11,6 +11,8 @@ public class FlipperAgent : Agent {
 
     [SerializeField] TrainingPinballArea trainingPinball;
     [SerializeField] Flipper.FlipperSide side = Flipper.FlipperSide.Left;
+    [SerializeField] float impactPredictionHorizon = 1.5f;
+    [SerializeField] float closeToTargetThreshold = 20f;
 
     int id = 0;
     int episodeId = 0;
@@ -27,7 +29,12 @@ public class FlipperAgent : Agent {
 
     bool BallInContact => Time.fixedTime <= ballInContactTimestamp + Time.fixedDeltaTime * 3;
 
-    float previousDistanceToTarget = -1f;
+    Flipper ControlledFlipper => trainingPinball.Flipper(side);
+    float NormalizationLength => trainingPinball.Configuration.AveragePinballDimension.magnitude;
+    Vector2 BallPosition => trainingPinball.Ball.transform.position;
+    float DistanceToTarget => Vector2.Distance(BallPosition, trainingPinball.Target.transform.position);
+
+    float closestDistanceToTarget = -1f;
     bool shotCountedForPress = false;
     int targetHitsInEpisode = 0;
     int drainsInEpisode = 0;
@@ -72,7 +79,7 @@ public class FlipperAgent : Agent {
     }
 
     private void FixedUpdate() {
-        UpdateCloseToTargetReward();
+        UpdateClosestDistanceToTarget();
     }
 
     public override void OnEpisodeBegin() {
@@ -83,49 +90,55 @@ public class FlipperAgent : Agent {
         ballEnterOtherFlipperTimestamp = 0;
         episodeBeginTimestamp = Time.fixedTime;
 
-        previousDistanceToTarget = -1f;
+        closestDistanceToTarget = -1f;
         shotCountedForPress = false;
         targetHitsInEpisode = 0;
         drainsInEpisode = 0;
     }
-
+    
     public override void CollectObservations(VectorSensor sensor) {
-        Vector2 ballDir = (trainingPinball.Ball.transform.position - trainingPinball.transform.position);
+        Vector2 flipperPosition = ControlledFlipper.transform.position;
+        Vector2 ballPosition = BallPosition;
+        Vector2 targetPosition = trainingPinball.Target.transform.position;
+        Vector2 ballToTarget = targetPosition - ballPosition;
 
-        Vector2 normalizedBallDir = ballDir / trainingPinball.Configuration.AveragePinballDimension;
+        sensor.AddObservation(ToFlipperFrame(ballPosition - flipperPosition) / NormalizationLength); // Ball position (2)
+        sensor.AddObservation(ToFlipperFrame(trainingPinball.Ball.linearVelocity) / NormalizationLength); // Ball velocity (2)
+        sensor.AddObservation(ToFlipperFrame(targetPosition - flipperPosition) / NormalizationLength); // Target position (2)
+        sensor.AddObservation(ToFlipperFrame(ballToTarget.normalized)); // Aim direction from the ball (2)
+        sensor.AddObservation(ballToTarget.magnitude / NormalizationLength); // Ball to target distance (1)
+
+        sensor.AddObservation(ControlledFlipper.CurrentAngleOffset / trainingPinball.Configuration.FlipperAngleOffsetMax); // (1)
+        sensor.AddObservation(trainingPinball.IsButtonPressed(side)); // (1)
+        sensor.AddObservation(BallInContact); // (1)
+
+        PredictImpact(out bool impactPredicted, out float timeToImpact, out float impactPosition);
+        sensor.AddObservation(impactPredicted); // (1)
+        sensor.AddObservation(timeToImpact / impactPredictionHorizon); // (1)
+        sensor.AddObservation(impactPosition / NormalizationLength); // Predicted ball position at iimpact (les loups et tout) (1)
         
-        Vector2 targetDir = (trainingPinball.Target.transform.position - trainingPinball.transform.position);
-        Vector2 normalizedTargetDir = targetDir / trainingPinball.Configuration.AveragePinballDimension;
+        // Total = 15
 
-        Vector2 normalizedBallVelocity = trainingPinball.Ball.linearVelocity / trainingPinball.Configuration.AveragePinballDimension;
-
-        sensor.AddObservation(trainingPinball.Flipper(side).WorldToLocalVector(normalizedBallDir));
-        sensor.AddObservation(trainingPinball.Flipper(side).WorldToLocalVector(normalizedTargetDir));
-        sensor.AddObservation(trainingPinball.Flipper(side).FinalAngle);
-        sensor.AddObservation(trainingPinball.Flipper(side).WorldToLocalVector(normalizedBallVelocity));
-        sensor.AddObservation(trainingPinball.IsButtonPressed(side));
-        sensor.AddObservation(BallInContact);
-        
-        Debug.DrawRay(trainingPinball.transform.position, trainingPinball.Flipper(side).WorldToLocalVector(normalizedBallDir)*10, Color.yellow);
+        Debug.DrawLine(flipperPosition, ballPosition, Color.yellow);
+        if (impactPredicted) {
+            Debug.DrawLine(ballPosition, flipperPosition + FromFlipperFrame(new Vector2(impactPosition, 0f)), Color.red);
+        }
     }
 
     public override void OnActionReceived(ActionBuffers actions) {
-
-        
         bool isPressed = actions.DiscreteActions[0] > 0;
+        bool wasPressed = trainingPinball.IsButtonPressed(side);
 
-        if (!trainingPinball.IsButtonPressed(side) && isPressed) {
+        if (!wasPressed && isPressed) {
             buttonPressedTimestamp = Time.fixedTime;
             shotCountedForPress = false;
         }
-        else if(trainingPinball.IsButtonPressed(side) && !isPressed)
-        {
-            if(buttonPressedTimestamp > ballInContactTimestamp)
-                UpdateScore(Recompenses.NoHit);
+        else if (wasPressed && !isPressed && buttonPressedTimestamp > ballInContactTimestamp) {
+            UpdateScore(Recompenses.NoHit);
         }
         
-        if (!BallInContact && (trainingPinball.IsButtonPressed(FlipperSide.Left) || trainingPinball.IsButtonPressed(FlipperSide.Right))) {
-            UpdateScore(Recompenses.ButtonPressedWithouBall);
+        if (isPressed && !BallInContact) {
+            UpdateScore(Recompenses.ButtonPressedWithouBall, Time.fixedDeltaTime);
         }
 
         trainingPinball.SetButtonState(isPressed, side);
@@ -140,20 +153,16 @@ public class FlipperAgent : Agent {
 
     void HandleOnEpisodeEnd()
     {
+        AddCloseToTargetReward();
         EndEpisode();
         episodeId++;
     }
-
-
-
+    
     void HandleOnBallEnterFlipper(FlipperSide side) {
         if (!BallInContact) {
             ballEnterFlipperTimestamp = Time.fixedTime;
         }
 
-        if (!BallInContact && (trainingPinball.IsButtonPressed(FlipperSide.Left) || trainingPinball.IsButtonPressed(FlipperSide.Right))) {
-            UpdateScore(Recompenses.ButtonPressedWithouBall);
-        }
         HandleOnBallInContactWithFlipper(side);
     }
 
@@ -164,17 +173,13 @@ public class FlipperAgent : Agent {
 
     void HandleOnBallExitFlipper(FlipperSide side) {
         // Do not use. May be called multiple times due to jittering
-        
-        if (!BallInContact && (trainingPinball.IsButtonPressed(FlipperSide.Left) || trainingPinball.IsButtonPressed(FlipperSide.Right))) {
-            UpdateScore(Recompenses.ButtonPressedWithouBall);
-        }
     }
 
     void HandleOnBallHitTarget()
     {
         ScoreManager.Instance.totalHitTarget += 1;
         targetHitsInEpisode++;
-        previousDistanceToTarget = -1f;
+        closestDistanceToTarget = 0f;
         UpdateScore(Recompenses.HitTarget); // God of all gods
     }
 
@@ -185,8 +190,6 @@ public class FlipperAgent : Agent {
     }
 
     void HandleOnBallEnterBound(BoundTrigger.BoundType type) {
-        previousDistanceToTarget = -1f;
-
         if (type == BoundTrigger.BoundType.Drain) {
             drainsInEpisode++;
             UpdateScore(Recompenses.TouchDrain);
@@ -203,16 +206,17 @@ public class FlipperAgent : Agent {
         AddReward(reward);
         ScoreManager.Instance.OnRecompenses.Invoke(recompenseType, id, reward);
     }
+
+    void UpdateClosestDistanceToTarget() {
+        if (closestDistanceToTarget < 0f) { return; }
+
+        closestDistanceToTarget = Mathf.Min(closestDistanceToTarget, DistanceToTarget);
+    }
     
-    void UpdateCloseToTargetReward() {
-        float distance = Vector2.Distance(trainingPinball.Ball.transform.position, trainingPinball.Target.transform.position);
+    void AddCloseToTargetReward() {
+        if (closestDistanceToTarget < 0f || closestDistanceToTarget >= closeToTargetThreshold) { return; }
 
-        if (previousDistanceToTarget >= 0f) {
-            float distanceGain = (previousDistanceToTarget - distance) / trainingPinball.Configuration.AveragePinballDimension.magnitude;
-            UpdateScore(Recompenses.CloseToTarget, distanceGain);
-        }
-
-        previousDistanceToTarget = distance;
+        UpdateScore(Recompenses.CloseToTarget, 1f - closestDistanceToTarget / closeToTargetThreshold);
     }
 
     void CountShot() {
@@ -220,5 +224,34 @@ public class FlipperAgent : Agent {
 
         shotCountedForPress = true;
         ScoreManager.Instance.totalShoot += 1;
+
+        if (closestDistanceToTarget < 0f) {
+            closestDistanceToTarget = DistanceToTarget;
+        }
+    }
+    
+    void PredictImpact(out bool impactPredicted, out float timeToImpact, out float impactPosition) {
+        Rigidbody2D ball = trainingPinball.Ball;
+        Vector2 position = ToFlipperFrame(BallPosition - (Vector2)ControlledFlipper.transform.position);
+        Vector2 velocity = ToFlipperFrame(ball.linearVelocity);
+        Vector2 gravity = ToFlipperFrame(Physics2D.gravity * ball.gravityScale);
+        float height = Mathf.Max(position.y - trainingPinball.Configuration.GetBallScale() * 0.5f, 0f);
+        
+        float time = (velocity.y + Mathf.Sqrt(velocity.y * velocity.y - 2f * gravity.y * height)) / -gravity.y;
+
+        impactPredicted = position.y > 0f && time <= impactPredictionHorizon;
+        timeToImpact = impactPredicted ? time : impactPredictionHorizon;
+        impactPosition = impactPredicted ? position.x + velocity.x * time + 0.5f * gravity.x * time * time : 0f;
+    }
+
+    Vector2 ToFlipperFrame(Vector2 worldVector) {
+        Vector2 local = ControlledFlipper.WorldToLocalVector(worldVector);
+        local.x *= ControlledFlipper.SideFactor;
+        return local;
+    }
+
+    Vector2 FromFlipperFrame(Vector2 localVector) {
+        localVector.x *= ControlledFlipper.SideFactor;
+        return Quaternion.Euler(0, 0, ControlledFlipper.InitialAngle) * localVector;
     }
 }
